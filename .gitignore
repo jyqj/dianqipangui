@@ -1,0 +1,41 @@
+# macOS / editor
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+upper-computer/.env.local
+
+# dependencies
+node_modules/
+**/node_modules/
+
+# build outputs
+upper-computer/.next/
+upper-computer/out/
+upper-computer/dist/
+car-controller-app/dist/
+car-controller-app/unpackage/
+
+# runtime data
+upper-computer/data/*.db
+upper-computer/data/*.db-shm
+upper-computer/data/*.db-wal
+upper-computer/data/*.sqlite
+upper-computer/data/*.sqlite3
+!upper-computer/data/.gitkeep
+
+# logs / caches
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.turbo/
+.cache/
+coverage/

@@ -1,0 +1,31 @@
+{
+  "pages": [
+    { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录" } },
+    { "path": "pages/main/index", "style": { "navigationBarTitleText": "控制", "navigationStyle": "custom" } },
+    { "path": "pages/orders/index", "style": { "navigationBarTitleText": "工单" } },
+    { "path": "pages/alarms/index", "style": { "navigationBarTitleText": "报警" } },
+    { "path": "pages/settings/index", "style": { "navigationBarTitleText": "设置" } },
+    { "path": "pages/debug/index", "style": { "navigationBarTitleText": "调试" } }
+  ],
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#3B82F6",
+    "backgroundColor": "#1F2937",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/main/index", "text": "控制" },
+      { "pagePath": "pages/orders/index", "text": "工单" },
+      { "pagePath": "pages/alarms/index", "text": "报警" },
+      { "pagePath": "pages/settings/index", "text": "设置" }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "盘柜转运控制",
+    "navigationBarBackgroundColor": "#1F2937",
+    "backgroundColor": "#111827",
+    "app-plus": {
+      "background": "#111827"
+    }
+  }
+}
