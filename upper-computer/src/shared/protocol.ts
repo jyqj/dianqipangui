@@ -15,7 +15,6 @@ export interface TelemetryFrame {
 export interface BridgeState {
   ble_connected: boolean;
   ble_device_name: string;
-  simulate_mode: boolean;
   app_version: string;
   battery_level: number;
   signal_strength: number;

@@ -95,7 +95,6 @@ import { useConnectionStore } from '../../stores/connectionStore'
 import { useOrderStore } from '../../stores/orderStore'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { useUserStore } from '../../stores/userStore'
-import FakeCarTransport from '../../services/car/FakeCarTransport'
 import BleCarTransport from '../../services/car/BleCarTransport'
 import SocketClient from '../../services/socket/SocketClient'
 import CommandArbiter from '../../services/bridge/CommandArbiter'
@@ -143,12 +142,12 @@ onUnmounted(() => {
 })
 
 function initTransport() {
-  // 根据模拟模式选择 transport
-  if (connStore.simulateMode) {
-    carTransport = new FakeCarTransport()
-  } else {
-    carTransport = new BleCarTransport()
-  }
+  carTransport = new BleCarTransport({
+    namePrefix: connStore.bleNamePrefix,
+    serviceId: connStore.bleServiceUuid,
+    charWriteId: connStore.bleCharWriteUuid,
+    charNotifyId: connStore.bleCharNotifyUuid,
+  })
 
   // 注册回调
   carTransport.onStatus((frame) => {
@@ -187,7 +186,7 @@ function initTransport() {
         event_type: 'completed',
         status: 'completed',
         order_id: orderId,
-        message: 'App 模拟小车执行完成',
+        message: 'App 收到小车执行完成事件',
         result,
         ts: Date.now(),
       })
@@ -196,12 +195,9 @@ function initTransport() {
 
   // 连接
   carTransport.connect().then(() => {
-    if (connStore.simulateMode) {
-      connStore.setBleConnected(true, { deviceName: '模拟小车' })
-    }
-    // 发送 hello
+    connStore.setBleConnected(true, carTransport.getDeviceInfo?.())
     if (SocketClient.connected) {
-      SocketClient.sendHello('1.0.0', connStore.simulateMode, Number(userStore.workerId) || undefined)
+      SocketClient.sendHello('1.0.0', Number(userStore.workerId) || undefined)
     }
   }).catch((err) => {
     connStore.setLastError(err.message)
@@ -304,11 +300,10 @@ function startBridgeStateReport() {
   bridgeStateTimer = setInterval(() => {
     if (SocketClient.connected) {
       SocketClient.sendBridgeState({
-        ble_connected: connStore.bleConnected || connStore.simulateMode,
-        simulate_mode: connStore.simulateMode,
+        ble_connected: connStore.bleConnected,
         control_owner: CommandArbiter.currentOwner,
         car_mode: carStore.mode,
-        ble_device_name: connStore.bleDeviceName || (connStore.simulateMode ? '模拟小车' : ''),
+        ble_device_name: connStore.bleDeviceName,
         app_version: '1.0.0',
         battery_level: carStore.batteryPct,
         signal_strength: connStore.bleRssi,

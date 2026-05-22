@@ -34,20 +34,19 @@ App 使用 Pinia 管理全局状态。所有 Store 在 `stores/` 目录下。
     socketId: null,
     pcOnline: false,              // 上位机是否在线
 
-    // BLE / 模拟 状态
+    // BLE 状态
     bleConnected: false,
     bleDeviceId: null,
     bleDeviceName: null,
     bleRssi: -100,
-    simulateMode: true,           // 是否模拟模式
 
     // 综合状态
     lastError: null,
   },
 
   getters: {
-    carConnected()                // bleConnected || simulateMode
-    statusText()                  // "在线/模拟" 等
+    carConnected()                // bleConnected
+    statusText()                  // "在线/离线" 等
   },
 
   actions: {

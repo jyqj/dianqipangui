@@ -4,7 +4,7 @@
 
 App 作为 BLE Central，ESP32 作为 Peripheral。通信基于 GATT 协议。
 
-当前嵌入式未完成，BLE 层先做抽象和预留，实际通信由 FakeCarTransport 模拟。
+App 不生成本地造数；BLE 层直接连接真实 ESP32 小车，所有状态与报警来自 notify。
 
 ## 2. GATT 服务定义
 
@@ -32,7 +32,6 @@ services/ble/
 services/car/
 ├── CarTransport.js       # 抽象接口
 ├── BleCarTransport.js    # 真实 BLE 实现
-└── FakeCarTransport.js   # 模拟实现
 ```
 
 ## 4. BleScanner

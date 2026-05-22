@@ -25,14 +25,6 @@
             @blur="onSaveSettings"
           />
         </view>
-        <view class="setting-item">
-          <text class="setting-label">模拟模式</text>
-          <switch
-            :checked="simulateMode"
-            color="#3B82F6"
-            @change="onSimulateModeChange"
-          />
-        </view>
       </view>
     </view>
 
@@ -149,7 +141,6 @@ const userStore = useUserStore()
 
 const serverIp = ref('')
 const serverPort = ref('')
-const simulateMode = ref(true)
 const bleNamePrefix = ref('')
 const bleServiceUuid = ref('')
 const bleCharWriteUuid = ref('')
@@ -167,7 +158,6 @@ onMounted(() => {
 function loadCurrentSettings() {
   serverIp.value = connStore.serverIp
   serverPort.value = String(connStore.serverPort)
-  simulateMode.value = connStore.simulateMode
   bleNamePrefix.value = connStore.bleNamePrefix
   bleServiceUuid.value = connStore.bleServiceUuid
   bleCharWriteUuid.value = connStore.bleCharWriteUuid
@@ -186,14 +176,8 @@ function onSaveSettings() {
     bleCharNotifyUuid: bleCharNotifyUuid.value,
     telemetryInterval: parseInt(telemetryInterval.value) || 500,
     joystickInterval: parseInt(joystickInterval.value) || 100,
-    simulateMode: simulateMode.value,
   })
   uni.showToast({ title: '设置已保存', icon: 'success', duration: 1000 })
-}
-
-function onSimulateModeChange(e) {
-  simulateMode.value = e.detail.value
-  onSaveSettings()
 }
 
 function onLogout() {

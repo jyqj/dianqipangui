@@ -20,7 +20,6 @@
 
 - ESP32 检测 1.5 秒无心跳 → 全车急停，进入 Fail-safe
 - App 检测 BLE 断开 → 上报 `BLE_LOST` 报警 → 上位机显示断连
-- 模拟模式下不受影响
 
 ### 2.2 Socket.IO 断连
 
@@ -93,7 +92,7 @@ ESTOP → APP_MANUAL
   条件：管理员确认 + App 本地复位
 
 任何状态 → FAULT
-  条件：BLE 断开、命令超时、模拟故障
+  条件：BLE 断开、命令超时、设备故障
 
 FAULT → APP_MANUAL
   条件：故障排除 + 手动复位

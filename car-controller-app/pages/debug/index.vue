@@ -21,10 +21,6 @@
           <text class="debug-value">{{ carStore.modeLabel }}</text>
         </view>
         <view class="debug-row">
-          <text class="debug-label">模拟模式</text>
-          <text class="debug-value">{{ connStore.simulateMode ? '是' : '否' }}</text>
-        </view>
-        <view class="debug-row">
           <text class="debug-label">控制权</text>
           <text class="debug-value">{{ arbiterOwner }}</text>
         </view>

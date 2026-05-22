@@ -88,8 +88,8 @@ class SocketClient {
     this.socket?.emit('app:auth', { worker_no: workerNo, password })
   }
 
-  sendHello(appVersion, simulateMode, workerId) {
-    const data = { app_version: appVersion, simulate_mode: simulateMode, worker_id: workerId }
+  sendHello(appVersion, workerId) {
+    const data = { app_version: appVersion, worker_id: workerId }
     log('socket', 'out', 'app:hello', data)
     this.socket?.emit('app:hello', data)
   }

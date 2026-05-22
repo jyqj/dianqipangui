@@ -34,7 +34,7 @@ App 建立 Socket.IO 连接
       → emit pc:auth_result {ok, token, role}
         → 认证成功：socket.join("app")
         → 认证失败：断开连接
-  → emit app:hello {app_version, simulate_mode}
+  → emit app:hello {app_version}
     → 服务端记录 app_sessions
   → 开始周期上报 app:bridge_state (1s)
   → 开始周期上报 app:telemetry (500ms)
@@ -79,7 +79,6 @@ Web 前端断开
 ```json
 {
   "app_version": "1.0.0",
-  "simulate_mode": true,
   "device_model": "Redmi Note 12"
 }
 ```
@@ -92,7 +91,6 @@ Web 前端断开
   "app_online": true,
   "socket_connected": true,
   "ble_connected": false,
-  "simulate_mode": true,
   "current_owner": "app",
   "current_mode": "manual",
   "current_order_id": null,

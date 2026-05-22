@@ -99,7 +99,7 @@ export default function StatusCards({
         value={appOnline ? "已连接" : "未连接"}
         subtext={
           bridgeState
-            ? `v${bridgeState.app_version} ${bridgeState.simulate_mode ? "(模拟)" : ""}`
+            ? `v${bridgeState.app_version}`
             : "等待连接..."
         }
         icon={<Smartphone className="w-5 h-5" />}

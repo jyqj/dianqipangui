@@ -154,7 +154,6 @@ function normalizeBridgeState(raw: Record<string, unknown>): BridgeState {
   return {
     ble_connected: Boolean(raw.ble_connected ?? raw.bleConnected),
     ble_device_name: str(raw.ble_device_name ?? raw.bleDeviceName, ""),
-    simulate_mode: Boolean(raw.simulate_mode ?? raw.simulateMode),
     app_version: str(raw.app_version ?? raw.appVersion, "unknown"),
     battery_level: num(raw.battery_level ?? raw.batteryLevel, 0),
     signal_strength: num(raw.signal_strength ?? raw.signalStrength ?? raw.rssi, 0),
@@ -328,12 +327,12 @@ export function initSocket(io: Server): void {
 
     socket.on(
       "app:hello",
-      (data: { app_version: string; worker_id?: number; simulate_mode?: boolean }) => {
+      (data: { app_version: string; worker_id?: number }) => {
         if (!socket.data.appAuthenticated) return;
         const db = getDb();
         db.prepare(
-          "INSERT INTO app_sessions (worker_id, socket_id, app_version, simulate_mode) VALUES (?, ?, ?, ?)"
-        ).run(data.worker_id || null, socket.id, data.app_version, data.simulate_mode ? 1 : 0);
+          "INSERT INTO app_sessions (worker_id, socket_id, app_version) VALUES (?, ?, ?)"
+        ).run(data.worker_id || null, socket.id, data.app_version);
         console.log(`[Socket] APP hello: v${data.app_version}`);
       }
     );
@@ -345,8 +344,8 @@ export function initSocket(io: Server): void {
 
       const db = getDb();
       db.prepare(
-        "UPDATE app_sessions SET ble_connected = ?, simulate_mode = ? WHERE socket_id = ? AND disconnected_at IS NULL"
-      ).run(normalized.ble_connected ? 1 : 0, normalized.simulate_mode ? 1 : 0, socket.id);
+        "UPDATE app_sessions SET ble_connected = ? WHERE socket_id = ? AND disconnected_at IS NULL"
+      ).run(normalized.ble_connected ? 1 : 0, socket.id);
 
       io.to("web_clients").emit("server:bridge_state", normalized);
     });

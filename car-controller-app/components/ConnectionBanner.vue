@@ -25,14 +25,8 @@ const carStore = useCarStore()
 const pcStatusText = computed(() => connStore.socketConnected ? '在线' : '离线')
 const pcStatusClass = computed(() => connStore.socketConnected ? 'dot-green' : 'dot-red')
 
-const bleStatusText = computed(() => {
-  if (connStore.simulateMode) return '模拟模式'
-  return connStore.bleConnected ? connStore.bleDeviceName || '已连接' : '未连接'
-})
-const bleStatusClass = computed(() => {
-  if (connStore.simulateMode) return 'dot-blue'
-  return connStore.bleConnected ? 'dot-green' : 'dot-red'
-})
+const bleStatusText = computed(() => connStore.bleConnected ? connStore.bleDeviceName || '已连接' : '未连接')
+const bleStatusClass = computed(() => connStore.bleConnected ? 'dot-green' : 'dot-red')
 
 const modeText = computed(() => carStore.modeLabel)
 const modeClass = computed(() => {
@@ -77,10 +71,6 @@ const modeClass = computed(() => {
   box-shadow: 0 0 6rpx #EF4444;
 }
 
-.dot-blue {
-  background-color: #3B82F6;
-  box-shadow: 0 0 6rpx #3B82F6;
-}
 
 .banner-text {
   font-size: 24rpx;

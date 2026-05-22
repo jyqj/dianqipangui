@@ -20,7 +20,7 @@ Socket.IO 基于 WebSocket 长连接，自动重连、事件驱动。
 | 事件名 | 说明 | 载荷 |
 |--------|------|------|
 | `app:auth` | 操作员登录认证 | `{worker_id, password}` |
-| `app:hello` | 连接后握手 | `{app_version, simulate_mode}` |
+| `app:hello` | 连接后握手 | `{app_version}` |
 | `app:bridge_state` | 桥接状态（1s 周期） | 见 2.3 |
 | `app:telemetry` | 小车遥测（500ms 周期） | 见 2.4 |
 | `app:alarm` | 报警事件 | 见 2.6 |
@@ -80,7 +80,6 @@ App 每 1 秒上报：
   "app_online": true,
   "socket_connected": true,
   "ble_connected": false,
-  "simulate_mode": true,
   "current_owner": "app",
   "current_mode": "manual",
   "current_order_id": null,
@@ -119,7 +118,7 @@ App 每 500ms 上报：
 | move_state | string | `idle` / `moving` / `tracing` / `stopped` |
 | lift_state | string | `idle` / `up` / `down` / `stopped` |
 | progress_pct | number | 工单执行进度 0-100 |
-| estimated_pos | object | 估计位置（嵌入式未完成时为模拟值） |
+| estimated_pos | object | 估计位置（真实设备上报） |
 | estimated_heading | number | 估计朝向角度 0-360 |
 | estimated_lift_height_mm | number | 估计推杆高度 mm |
 | battery_v | number | 电池电压 V |
@@ -180,7 +179,7 @@ App 每 500ms 上报：
   "cmd_id": "cmd_20260521_0001",
   "stage": "car_started",
   "ok": true,
-  "msg": "模拟小车已开始循迹"
+  "msg": "小车已开始循迹"
 }
 ```
 

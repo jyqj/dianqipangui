@@ -5,21 +5,20 @@
 手机 App 运行在 Android 手机上，是系统的**桥接控制中心**：
 
 ```
-手机 App = 现场遥控器 + BLE 管理器 + Socket.IO 客户端 + 控制权仲裁器 + 模拟小车
+手机 App = 现场遥控器 + BLE 管理器 + Socket.IO 客户端 + 控制权仲裁器
 ```
 
 ### App 负责
 
 1. 操作员登录
 2. 连接上位机（Socket.IO）
-3. 连接 BLE 小车 / 启用模拟模式
+3. 连接真实 BLE 小车
 4. 手动遥控（摇杆、推杆）
 5. 急停
-6. 接收上位机工单，转为 BLE/模拟指令
+6. 接收上位机工单，转为 BLE 指令
 7. 上报遥测状态给上位机
 8. 上报报警给上位机
 9. 控制权仲裁
-10. 模拟小车（FakeCarTransport）
 
 ### App 不负责
 
@@ -53,7 +52,7 @@ car-controller-app/
 │   ├── alarms/
 │   │   └── index.vue            # 报警日志
 │   ├── settings/
-│   │   └── index.vue            # 设置（服务器地址、BLE、模拟模式）
+│   │   └── index.vue            # 设置（服务器地址、BLE）
 │   └── debug/
 │       └── index.vue            # 调试页（隐藏）
 ├── components/
@@ -69,7 +68,6 @@ car-controller-app/
 │   │   └── SocketClient.js      # Socket.IO 客户端封装
 │   ├── car/
 │   │   ├── CarTransport.js      # 抽象接口
-│   │   ├── FakeCarTransport.js  # 模拟小车实现
 │   │   └── BleCarTransport.js   # 真实 BLE 实现（预留）
 │   ├── ble/
 │   │   ├── BleScanner.js        # BLE 扫描
@@ -117,21 +115,19 @@ class CarTransport {
 }
 ```
 
-### 4.2 两个实现
+### 4.2 实现
 
 | 实现 | 用途 | 优先级 |
 |------|------|--------|
-| `FakeCarTransport` | 模拟小车，无需硬件 | **当前优先实现** |
-| `BleCarTransport` | 真实 BLE 通信 | 嵌入式完成后对接 |
+| `BleCarTransport` | 真实 BLE 通信 | 当前唯一通信实现 |
 
 ### 4.3 页面调用方式
 
 ```javascript
-// 页面不关心底层是真 BLE 还是模拟器
-carTransport.sendCommand({ c: "move", dx: 0.3, dy: 0.1, spd: 2 })
+carTransport.sendCommand({ type: "move", dx: 0.3, dy: 0.1, speed: 2 })
 ```
 
-切换模式只需在设置页更改 `simulate_mode`，App 自动切换 Transport 实现。
+必须连接真实 BLE 小车后才会产生遥测和执行反馈。
 
 ## 5. 编译与运行
 

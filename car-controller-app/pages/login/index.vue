@@ -99,8 +99,7 @@ function onLogin() {
       // 2. 发送认证
       SocketClient.login(workerId.value.trim(), password.value.trim())
     } else {
-      // 连接失败后尝试模拟登录
-      simulateLogin()
+      failLogin('上位机连接已断开')
     }
   }
 
@@ -108,6 +107,7 @@ function onLogin() {
     isLoading.value = false
     SocketClient.off('connectionChange', onConnection)
     SocketClient.off('authResult', onAuthResult)
+    SocketClient.off('connectError', onConnectError)
 
     if (result.ok === true || result.status === 'ok') {
       userStore.setAuthResult(result)
@@ -122,8 +122,7 @@ function onLogin() {
     SocketClient.off('connectionChange', onConnection)
     SocketClient.off('connectError', onConnectError)
     SocketClient.off('authResult', onAuthResult)
-    // 连接失败，尝试模拟登录
-    simulateLogin()
+    failLogin(`连接上位机失败：${msg || '请检查服务器地址'}`)
   }
 
   SocketClient.on('connectionChange', onConnection)
@@ -136,38 +135,14 @@ function onLogin() {
       SocketClient.off('connectionChange', onConnection)
       SocketClient.off('authResult', onAuthResult)
       SocketClient.off('connectError', onConnectError)
-      simulateLogin()
+      failLogin('连接上位机超时，请检查服务器地址和网络')
     }
   }, 5000)
 }
 
-function simulateLogin() {
-  if (!connStore.simulateMode) {
-    isLoading.value = false
-    errorMsg.value = '连接上位机失败，请检查服务器地址或开启模拟模式'
-    return
-  }
-  // 模拟模式下直接登录
+function failLogin(message) {
   isLoading.value = false
-  userStore.setAuthResult({
-    ok: true,
-    status: 'ok',
-    worker_id: workerId.value.trim(),
-    worker_name: workerId.value.trim(),
-    role: 'operator',
-    token: 'simulated_token',
-  })
-  connStore.setSimulateMode(true)
-
-  uni.showToast({
-    title: '已离线登录（模拟模式）',
-    icon: 'none',
-    duration: 2000,
-  })
-
-  setTimeout(() => {
-    uni.switchTab({ url: '/pages/main/index' })
-  }, 500)
+  errorMsg.value = message
 }
 
 function goSettings() {

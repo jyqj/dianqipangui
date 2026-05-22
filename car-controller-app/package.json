@@ -7,7 +7,7 @@
     "dev:app": "uni -p app",
     "build:h5": "vite build",
     "build:app-android": "uni build -p app-android",
-    "check:js": "node --check services/socket/SocketClient.js && node --check services/bridge/CommandMapper.js && node --check services/car/FakeCarTransport.js"
+    "check:js": "node --check services/socket/SocketClient.js && node --check services/bridge/CommandMapper.js && node --check services/car/BleCarTransport.js"
   },
   "dependencies": {
     "pinia": "^2.1.0",

@@ -9,10 +9,8 @@ export const useConnectionStore = defineStore('connection', {
     bleDeviceId: '',
     bleDeviceName: '',
     bleRssi: 0,
-    simulateMode: true,
     lastError: '',
 
-    // 配置
     serverIp: '192.168.1.100',
     serverPort: 3000,
     bleNamePrefix: 'ESP32',
@@ -25,10 +23,10 @@ export const useConnectionStore = defineStore('connection', {
 
   getters: {
     serverUrl: (state) => `http://${state.serverIp}:${state.serverPort}`,
-    isFullyConnected: (state) => state.socketConnected && (state.bleConnected || state.simulateMode),
+    isFullyConnected: (state) => state.socketConnected && state.bleConnected,
     connectionSummary: (state) => {
       const pc = state.socketConnected ? '在线' : '离线'
-      const ble = state.simulateMode ? '模拟模式' : (state.bleConnected ? '已连接' : '未连接')
+      const ble = state.bleConnected ? '已连接' : '未连接'
       return { pc, ble }
     },
   },
@@ -50,11 +48,11 @@ export const useConnectionStore = defineStore('connection', {
         this.bleDeviceName = deviceInfo.deviceName || ''
         this.bleRssi = deviceInfo.rssi || 0
       }
-    },
-
-    setSimulateMode(mode) {
-      this.simulateMode = mode
-      uni.setStorageSync('simulate_mode', mode)
+      if (!connected) {
+        this.bleDeviceId = ''
+        this.bleDeviceName = ''
+        this.bleRssi = 0
+      }
     },
 
     setLastError(error) {
@@ -70,7 +68,6 @@ export const useConnectionStore = defineStore('connection', {
       if (settings.bleCharNotifyUuid !== undefined) this.bleCharNotifyUuid = settings.bleCharNotifyUuid
       if (settings.telemetryInterval !== undefined) this.telemetryInterval = settings.telemetryInterval
       if (settings.joystickInterval !== undefined) this.joystickInterval = settings.joystickInterval
-      if (settings.simulateMode !== undefined) this.simulateMode = settings.simulateMode
       this.saveSettings()
     },
 
@@ -84,7 +81,6 @@ export const useConnectionStore = defineStore('connection', {
         bleCharNotifyUuid: this.bleCharNotifyUuid,
         telemetryInterval: this.telemetryInterval,
         joystickInterval: this.joystickInterval,
-        simulateMode: this.simulateMode,
       })
     },
 

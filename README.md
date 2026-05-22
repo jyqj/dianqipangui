@@ -3,7 +3,7 @@
 包含两个软件部分：
 
 - `upper-computer/`：上位机 Web 管理系统，Next.js + Socket.IO + SQLite。
-- `car-controller-app/`：手机 App，uni-app + Pinia + Socket.IO Client，内置 FakeCar 模拟小车，预留 BLE 接入。
+- `car-controller-app/`：手机 App，uni-app + Pinia + Socket.IO Client，真实 BLE 小车接入。
 
 主要文档见 `docs/README.md`。
 

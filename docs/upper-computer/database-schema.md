@@ -117,7 +117,6 @@
 | connected_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | 连接时间 |
 | disconnected_at | DATETIME | | 断开时间 |
 | ble_connected | INTEGER | DEFAULT 0 | BLE 是否连接 |
-| simulate_mode | INTEGER | DEFAULT 1 | 是否模拟模式 |
 
 ## 3. 写入策略
 

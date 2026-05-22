@@ -5,61 +5,61 @@ import { BlePacketEncoder, BlePacketDecoder } from '../ble/BlePacketCodec'
 import { BLE_UUID } from '../protocol/carProtocol'
 import { log } from '../../utils/logger'
 
+function sameUuid(a, b) {
+  return String(a || '').toLowerCase() === String(b || '').toLowerCase()
+}
+
+function firstWritable(chars) {
+  return chars.find(c => c.properties?.write || c.properties?.writeNoResponse)
+}
+
+function firstNotifiable(chars) {
+  return chars.find(c => c.properties?.notify || c.properties?.indicate)
+}
+
 /**
- * 真实 BLE 小车通信实现
- * 待嵌入式完成后对接
+ * 真实 BLE 小车通信实现。
+ * 不生成任何本地遥测；状态、报警和工单完成事件只来自 BLE notify。
  */
 export default class BleCarTransport extends CarTransport {
-  constructor() {
+  constructor(options = {}) {
     super()
     this._connected = false
     this._deviceId = ''
     this._deviceName = ''
-    this._serviceId = BLE_UUID.SERVICE
-    this._charWriteId = BLE_UUID.CHAR_WRITE
-    this._charNotifyId = BLE_UUID.CHAR_NOTIFY
+    this._deviceRssi = 0
+    this._serviceId = options.serviceId || BLE_UUID.SERVICE
+    this._charWriteId = options.charWriteId || BLE_UUID.CHAR_WRITE
+    this._charNotifyId = options.charNotifyId || BLE_UUID.CHAR_NOTIFY
+    this._namePrefix = options.namePrefix || 'ESP32'
     this._writeQueue = new BleWriteQueue()
     this._decoder = new BlePacketDecoder()
-    this._mtu = 20
+    this._mtu = options.mtu || 20
+    this._notifyHandler = null
   }
 
-  /**
-   * 连接 BLE 小车
-   * @param {string} namePrefix - 设备名前缀，如 "ESP32"
-   * @returns {Promise<boolean>}
-   */
-  async connect(namePrefix = 'ESP32') {
+  async connect(namePrefix = this._namePrefix) {
     log('car', 'out', 'ble:connect', { namePrefix })
 
     try {
-      // 1. 初始化蓝牙
       await BleScanner.init()
 
-      // 2. 扫描设备
       const devices = await BleScanner.startScan(namePrefix, 10000)
       if (devices.length === 0) {
-        throw new Error('未找到 BLE 设备')
+        throw new Error(`未找到 BLE 设备：${namePrefix}`)
       }
 
-      // 选择信号最强的设备
-      const target = devices.sort((a, b) => b.RSSI - a.RSSI)[0]
+      const target = devices.sort((a, b) => (b.RSSI || -999) - (a.RSSI || -999))[0]
       this._deviceId = target.deviceId
       this._deviceName = target.name
+      this._deviceRssi = target.RSSI || 0
 
-      // 3. 连接设备
-      // TODO: 待嵌入式完成后对接
       await this._createBLEConnection(this._deviceId)
-
-      // 4. 获取服务和特征
-      // TODO: 待嵌入式完成后对接
       await this._discoverServices()
-
-      // 5. 启用通知
-      // TODO: 待嵌入式完成后对接
       await this._enableNotify()
 
       this._connected = true
-      log('car', 'in', 'ble:connected', { deviceId: this._deviceId, name: this._deviceName })
+      log('car', 'in', 'ble:connected', this.getDeviceInfo())
       return true
     } catch (err) {
       log('car', 'in', 'ble:connect_error', { error: err.message })
@@ -72,10 +72,20 @@ export default class BleCarTransport extends CarTransport {
     log('car', 'out', 'ble:disconnect', { deviceId: this._deviceId })
     this._writeQueue.clear()
 
+    if (this._notifyHandler && typeof uni.offBLECharacteristicValueChange === 'function') {
+      try { uni.offBLECharacteristicValueChange(this._notifyHandler) } catch (_) {}
+    }
+    this._notifyHandler = null
+
     if (this._deviceId) {
       try {
-        // TODO: 待嵌入式完成后对接
-        // uni.closeBLEConnection({ deviceId: this._deviceId })
+        await new Promise((resolve) => {
+          uni.closeBLEConnection({
+            deviceId: this._deviceId,
+            success: resolve,
+            fail: resolve,
+          })
+        })
       } catch (err) {
         console.error('[BleCarTransport] disconnect error:', err)
       }
@@ -84,6 +94,7 @@ export default class BleCarTransport extends CarTransport {
     this._connected = false
     this._deviceId = ''
     this._deviceName = ''
+    this._deviceRssi = 0
   }
 
   isConnected() {
@@ -92,7 +103,7 @@ export default class BleCarTransport extends CarTransport {
 
   async sendCommand(cmd) {
     if (!this._connected) {
-      return { success: false, error: '未连接' }
+      return { success: false, error: 'BLE 未连接' }
     }
 
     log('car', 'out', `ble:cmd:${cmd.type}`, cmd)
@@ -113,63 +124,101 @@ export default class BleCarTransport extends CarTransport {
     }
   }
 
-  // ---- 内部方法（待对接） ----
-
-  async _createBLEConnection(deviceId) {
-    // TODO: 待嵌入式完成后对接
-    // return new Promise((resolve, reject) => {
-    //   uni.createBLEConnection({
-    //     deviceId,
-    //     success: resolve,
-    //     fail: reject,
-    //   })
-    // })
-    throw new Error('BLE 连接尚未实现，请使用模拟模式')
+  _createBLEConnection(deviceId) {
+    return new Promise((resolve, reject) => {
+      uni.createBLEConnection({
+        deviceId,
+        timeout: 10000,
+        success: resolve,
+        fail: (err) => reject(new Error(`BLE 连接失败: ${err.errMsg || err.errCode}`)),
+      })
+    })
   }
 
   async _discoverServices() {
-    // TODO: 待嵌入式完成后对接
-    // 获取服务列表 → 获取特征列表 → 确认写入和通知特征
+    const services = await new Promise((resolve, reject) => {
+      uni.getBLEDeviceServices({
+        deviceId: this._deviceId,
+        success: (res) => resolve(res.services || []),
+        fail: (err) => reject(new Error(`获取 BLE 服务失败: ${err.errMsg || err.errCode}`)),
+      })
+    })
+
+    const service = services.find(s => sameUuid(s.uuid, this._serviceId))
+    if (!service) {
+      throw new Error(`未找到目标 BLE Service: ${this._serviceId}`)
+    }
+    this._serviceId = service.uuid
+
+    const chars = await new Promise((resolve, reject) => {
+      uni.getBLEDeviceCharacteristics({
+        deviceId: this._deviceId,
+        serviceId: this._serviceId,
+        success: (res) => resolve(res.characteristics || []),
+        fail: (err) => reject(new Error(`获取 BLE 特征失败: ${err.errMsg || err.errCode}`)),
+      })
+    })
+
+    const writeChar = chars.find(c => sameUuid(c.uuid, this._charWriteId)) || firstWritable(chars)
+    const notifyChar = chars.find(c => sameUuid(c.uuid, this._charNotifyId)) || firstNotifiable(chars)
+
+    if (!writeChar) throw new Error(`未找到可写 BLE 特征: ${this._charWriteId}`)
+    if (!notifyChar) throw new Error(`未找到可通知 BLE 特征: ${this._charNotifyId}`)
+
+    this._charWriteId = writeChar.uuid
+    this._charNotifyId = notifyChar.uuid
   }
 
   async _enableNotify() {
-    // TODO: 待嵌入式完成后对接
-    // uni.notifyBLECharacteristicValueChange(...)
-    // uni.onBLECharacteristicValueChange(res => { this._onBleData(res.value) })
+    this._notifyHandler = (res) => {
+      if (res.deviceId !== this._deviceId) return
+      if (!sameUuid(res.characteristicId, this._charNotifyId)) return
+      this._onBleData(res.value)
+    }
+    uni.onBLECharacteristicValueChange(this._notifyHandler)
+
+    await new Promise((resolve, reject) => {
+      uni.notifyBLECharacteristicValueChange({
+        deviceId: this._deviceId,
+        serviceId: this._serviceId,
+        characteristicId: this._charNotifyId,
+        state: true,
+        success: resolve,
+        fail: (err) => reject(new Error(`启用 BLE notify 失败: ${err.errMsg || err.errCode}`)),
+      })
+    })
   }
 
-  /**
-   * 处理 BLE 通知数据
-   */
   _onBleData(arrayBuffer) {
     this._decoder.feed(arrayBuffer)
-    if (this._decoder.isComplete()) {
-      const jsonStr = this._decoder.getResult()
-      try {
-        const frame = JSON.parse(jsonStr)
-        log('car', 'in', 'ble:data', frame)
+    if (!this._decoder.isComplete()) return
 
-        if (frame.type === 'status' && this._statusCallback) {
-          this._statusCallback(frame)
-        } else if (frame.type === 'alarm' && this._alarmCallback) {
-          this._alarmCallback(frame)
-        } else if (frame.type === 'order_done' && this._orderDoneCallback) {
-          this._orderDoneCallback(frame)
-        }
-      } catch (err) {
-        console.error('[BleCarTransport] parse error:', err)
+    const jsonStr = this._decoder.getResult()
+    try {
+      const frame = JSON.parse(jsonStr)
+      log('car', 'in', 'ble:data', frame)
+
+      if (frame.type === 'status' && this._statusCallback) {
+        this._statusCallback(frame)
+      } else if (frame.type === 'alarm' && this._alarmCallback) {
+        this._alarmCallback(frame)
+      } else if (frame.type === 'order_done' && this._orderDoneCallback) {
+        this._orderDoneCallback(frame)
       }
+    } catch (err) {
+      console.error('[BleCarTransport] parse error:', err)
     }
   }
 
-  /**
-   * 获取设备信息
-   */
   getDeviceInfo() {
     return {
       deviceId: this._deviceId,
       deviceName: this._deviceName,
+      rssi: this._deviceRssi,
       connected: this._connected,
+      serviceId: this._serviceId,
+      charWriteId: this._charWriteId,
+      charNotifyId: this._charNotifyId,
     }
   }
 }

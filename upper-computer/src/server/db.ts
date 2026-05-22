@@ -102,8 +102,7 @@ export function initDatabase(): void {
       app_version TEXT,
       connected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       disconnected_at DATETIME,
-      ble_connected INTEGER DEFAULT 0,
-      simulate_mode INTEGER DEFAULT 1
+      ble_connected INTEGER DEFAULT 0
     );
   `);
 
